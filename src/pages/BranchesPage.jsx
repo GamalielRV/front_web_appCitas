@@ -62,6 +62,8 @@ function BranchesPage() {
     businessTypeId: '',
     ownerQrCode: '',
     address: '',
+    latitude: '',
+    longitude: '',
     dayStart: '',
     dayEnd: '',
     phone: '',
@@ -144,11 +146,11 @@ function BranchesPage() {
     }
 
     lastAppliedSupportPrefillKeyRef.current = supportPrefillKey
-    setCreateForm((prev) => ({
-      ...prev,
-      ownerQrCode: supportOwnerQr || prev.ownerQrCode,
-      phone: supportPhone || prev.phone,
-    }))
+      setCreateForm((prev) => ({
+        ...prev,
+        ownerQrCode: supportOwnerQr || prev.ownerQrCode,
+        phone: supportPhone || prev.phone,
+      }))
 
     if (createSectionRef.current) {
       createSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -308,13 +310,38 @@ function BranchesPage() {
       setCreateError('Debes ingresar un QR de owner.')
       return
     }
+    const manualAddress = createForm.address.trim()
+    const hasLat = createForm.latitude !== ''
+    const hasLng = createForm.longitude !== ''
+    if (hasLat !== hasLng) {
+      setCreateError('Debes ingresar latitude y longitude juntos.')
+      return
+    }
+
+    let parsedLatitude = null
+    let parsedLongitude = null
+    if (hasLat && hasLng) {
+      parsedLatitude = Number(createForm.latitude)
+      parsedLongitude = Number(createForm.longitude)
+      if (!Number.isFinite(parsedLatitude) || !Number.isFinite(parsedLongitude)) {
+        setCreateError('Latitude y longitude deben ser numeros validos.')
+        return
+      }
+      if (parsedLatitude < -90 || parsedLatitude > 90 || parsedLongitude < -180 || parsedLongitude > 180) {
+        setCreateError('Coordenadas fuera de rango. Latitude [-90,90], longitude [-180,180].')
+        return
+      }
+    }
 
     const payload = {
       name: createForm.name.trim(),
       business_type_id: createForm.businessTypeId,
       owner_qr_code: createForm.ownerQrCode.trim(),
       active: createForm.active,
-      ...(createForm.address.trim() ? { address: createForm.address.trim() } : {}),
+      ...(manualAddress ? { address: manualAddress } : {}),
+      ...(parsedLatitude !== null && parsedLongitude !== null
+        ? { latitude: parsedLatitude, longitude: parsedLongitude }
+        : {}),
       ...(createForm.dayStart ? { day_start: createForm.dayStart } : {}),
       ...(createForm.dayEnd ? { day_end: createForm.dayEnd } : {}),
       ...(createForm.phone.trim() ? { phone: createForm.phone.trim() } : {}),
@@ -345,6 +372,8 @@ function BranchesPage() {
         name: '',
         ownerQrCode: '',
         address: '',
+        latitude: '',
+        longitude: '',
         dayStart: '',
         dayEnd: '',
         phone: '',
@@ -440,6 +469,28 @@ function BranchesPage() {
             <input
               value={createForm.address}
               onChange={(event) => setCreateForm((prev) => ({ ...prev, address: event.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block text-slate-600">Latitude</span>
+            <input
+              type="number"
+              step="any"
+              value={createForm.latitude}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, latitude: event.target.value }))}
+              placeholder="9.9347"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block text-slate-600">Longitude</span>
+            <input
+              type="number"
+              step="any"
+              value={createForm.longitude}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, longitude: event.target.value }))}
+              placeholder="-84.0875"
               className="w-full rounded-lg border border-slate-300 px-3 py-2"
             />
           </label>
