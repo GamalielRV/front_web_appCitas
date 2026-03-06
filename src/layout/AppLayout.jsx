@@ -7,6 +7,8 @@ const navItems = [
   { to: '/categorias', label: 'Categorias' },
   { to: '/sucursales', label: 'Sucursales' },
   { to: '/owners', label: 'Owners/Admins' },
+  { to: '/contenido-legal', label: 'Contenido legal' },
+  { to: '/contenido-privacidad', label: 'Contenido privacidad' },
   { to: '/soporte/mensajes', label: 'Soporte mensajes' },
   { to: '/soporte/solicitudes', label: 'Soporte solicitudes' },
 ]
@@ -16,6 +18,8 @@ const routeTitles = {
   '/categorias': 'Categorias de negocio',
   '/sucursales': 'Sucursales globales',
   '/owners': 'Owners y admins',
+  '/contenido-legal': 'Contenido legal',
+  '/contenido-privacidad': 'Contenido de privacidad',
   '/soporte/mensajes': 'Soporte: mensajes',
   '/soporte/solicitudes': 'Soporte: solicitudes',
 }
@@ -34,6 +38,7 @@ function AppLayout() {
       <div className="mx-auto flex min-h-screen w-full max-w-[1720px] flex-col px-3 md:flex-row md:px-5">
         <aside className="border-b border-slate-200 bg-white/80 p-5 backdrop-blur md:min-h-screen md:w-72 md:border-r md:border-b-0">
           <div className="mb-6">
+            <img src="/LogoCitapp.png" alt="Logo Citas App" className="mb-3 h-12 w-auto rounded-lg object-contain" />
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Citas App</p>
             <h1 className="text-2xl font-bold">Super Admin</h1>
           </div>
