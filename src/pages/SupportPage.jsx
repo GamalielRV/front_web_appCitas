@@ -4,19 +4,37 @@ import { getSupportTicket, getSupportTickets, updateSupportTicket } from '../ser
 import { PLATFORM_SUPPORT_NOTIFICATIONS_ARRIVED_EVENT } from '../utils/appEvents'
 import { showSuccessAlert } from '../utils/alerts'
 
-const ticketStatusOptions = [
-  { value: 'all', label: 'Todos' },
-  { value: 'pending', label: 'Pendiente' },
-  { value: 'in_review', label: 'Sucursal registrada' },
-  { value: 'resolved', label: 'Pago realizado' },
-  { value: 'closed', label: 'Concluida' },
-]
-
-const ticketStatusLabels = {
-  pending: 'Pendiente',
-  in_review: 'Sucursal registrada',
-  resolved: 'Pago realizado',
-  closed: 'Concluida',
+const ticketStatusConfig = {
+  message: {
+    options: [
+      { value: 'all', label: 'Todos' },
+      { value: 'pending', label: 'Recibido' },
+      { value: 'in_review', label: 'Resolviendo' },
+      { value: 'resolved', label: 'Corregido' },
+      { value: 'closed', label: 'Cerrado' },
+    ],
+    labels: {
+      pending: 'Recibido',
+      in_review: 'Resolviendo',
+      resolved: 'Corregido',
+      closed: 'Cerrado',
+    },
+  },
+  branch_registration: {
+    options: [
+      { value: 'all', label: 'Todos' },
+      { value: 'pending', label: 'Pendiente' },
+      { value: 'in_review', label: 'Sucursal registrada' },
+      { value: 'resolved', label: 'Pago realizado' },
+      { value: 'closed', label: 'Concluida' },
+    ],
+    labels: {
+      pending: 'Pendiente',
+      in_review: 'Sucursal registrada',
+      resolved: 'Pago realizado',
+      closed: 'Concluida',
+    },
+  },
 }
 
 const ticketStatusClasses = {
@@ -75,11 +93,20 @@ function getStatusPillClass(status) {
   return ticketStatusClasses[status] || 'bg-slate-100 text-slate-700 border border-slate-300'
 }
 
+function getStatusOptionListByType(type) {
+  return ticketStatusConfig[type]?.options || ticketStatusConfig.message.options
+}
+
+function getStatusLabelByType(type, status) {
+  return ticketStatusConfig[type]?.labels?.[status] || ticketStatusConfig.message.labels[status] || status
+}
+
 function SupportPage() {
   const navigate = useNavigate()
   const { tab = 'mensajes' } = useParams()
   const activeTab = tab === 'solicitudes' ? 'solicitudes' : 'mensajes'
   const fixedType = supportTabs[activeTab].apiType
+  const statusOptions = useMemo(() => getStatusOptionListByType(fixedType), [fixedType])
   const [searchParams, setSearchParams] = useSearchParams()
   const ticketFromQuery = searchParams.get('ticket') || ''
 
@@ -315,7 +342,7 @@ function SupportPage() {
         admin_note: adminNote || null,
       })
       setTickets((prev) => prev.map((item) => (item.id === ticket.id ? { ...item, status } : item)))
-      showSuccessAlert(`Estado actualizado: ${ticketStatusLabels[status] || status}`)
+      showSuccessAlert(`Estado actualizado: ${getStatusLabelByType(ticket.type, status)}`)
     } catch (statusError) {
       setError(toFriendlyError(statusError))
     } finally {
@@ -338,7 +365,7 @@ function SupportPage() {
               onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
               className="w-full rounded-lg border border-slate-300 px-3 py-2"
             >
-              {ticketStatusOptions.map((option) => (
+              {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -392,7 +419,7 @@ function SupportPage() {
                   <p className="mt-1 text-sm">
                     <span className="font-semibold">Estado:</span>{' '}
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusPillClass(ticket.status)}`}>
-                      {ticketStatusLabels[ticket.status] || ticket.status}
+                      {getStatusLabelByType(ticket.type, ticket.status)}
                     </span>
                   </p>
                   <div className="mt-3 flex items-center justify-end gap-2">
@@ -602,7 +629,7 @@ function SupportPage() {
                         onChange={(event) => setUpdateForm((prev) => ({ ...prev, status: event.target.value }))}
                         className="w-full rounded-lg border border-slate-300 px-3 py-2"
                       >
-                        {ticketStatusOptions
+                        {statusOptions
                           .filter((option) => option.value !== 'all')
                           .map((option) => (
                             <option key={option.value} value={option.value}>
