@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { DEFAULT_PRIVACY_CONTENT, DEFAULT_PRIVACY_TITLE } from '../data/legalDefaults'
-import { getPlatformPrivacy, updatePlatformPrivacy } from '../services/legalContentApi'
+import { useAuth } from '../hooks/useAuth'
+import { getPlatformPrivacy, getPublicPrivacy, updatePlatformPrivacy } from '../services/legalContentApi'
 import { showSuccessAlert } from '../utils/alerts'
 
 function PrivacyContentPage() {
+  const { isAuthenticated, sessionReady } = useAuth()
+  const canEdit = isAuthenticated
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -21,7 +25,7 @@ function PrivacyContentPage() {
       setLoading(true)
       setError('')
       try {
-        const legal = await getPlatformPrivacy()
+        const legal = canEdit ? await getPlatformPrivacy() : await getPublicPrivacy()
         if (!mounted) {
           return
         }
@@ -35,7 +39,7 @@ function PrivacyContentPage() {
         }))
       } catch {
         if (mounted) {
-          setError('No se pudo cargar politica desde API. Edita borrador y configura endpoint de backend.')
+          setError('No se pudo cargar politica desde API. Mostrando borrador local.')
         }
       } finally {
         if (mounted) {
@@ -48,10 +52,14 @@ function PrivacyContentPage() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [canEdit])
 
   const onSubmit = async (event) => {
     event.preventDefault()
+    if (!canEdit) {
+      setError('Debes iniciar sesion como super admin para editar este contenido.')
+      return
+    }
     setSaving(true)
     setError('')
     try {
@@ -70,13 +78,53 @@ function PrivacyContentPage() {
     }
   }
 
+  if (!sessionReady) {
+    return (
+      <section className="mx-auto w-full max-w-6xl px-4 py-6">
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-sm text-slate-500">Validando sesion...</p>
+        </article>
+      </section>
+    )
+  }
+
   return (
-    <section className="space-y-5">
+    <section className="mx-auto w-full max-w-6xl space-y-5 px-4 py-6">
       <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h3 className="text-lg font-semibold">Politica de privacidad</h3>
-        <p className="mt-1 text-sm text-slate-600">
-          Este contenido se publica para web y app movil como documento legal de privacidad.
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-semibold">Politica de privacidad</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              Este contenido se publica para web y app movil como documento legal de privacidad.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={[
+                'rounded-full px-2 py-1 text-xs font-semibold',
+                canEdit ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800',
+              ].join(' ')}
+            >
+              {canEdit ? 'Modo edicion' : 'Solo lectura'}
+            </span>
+            {!canEdit && (
+              <Link
+                to="/login"
+                className="rounded-lg bg-teal-700 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-600"
+              >
+                Iniciar sesion
+              </Link>
+            )}
+            {canEdit && (
+              <Link
+                to="/"
+                className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Ir al panel
+              </Link>
+            )}
+          </div>
+        </div>
       </article>
 
       {error && <p className="rounded-lg bg-rose-100 px-3 py-2 text-sm text-rose-800">{error}</p>}
@@ -88,63 +136,67 @@ function PrivacyContentPage() {
       ) : (
         <div className="grid gap-5 xl:grid-cols-[1.15fr_1fr]">
           <form onSubmit={onSubmit} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="grid gap-3 md:grid-cols-2">
-              <label className="text-sm md:col-span-2">
-                <span className="mb-1 block text-slate-600">Titulo</span>
-                <input
-                  required
-                  value={form.title}
-                  onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                />
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block text-slate-600">Version</span>
-                <input
-                  required
-                  value={form.version}
-                  onChange={(event) => setForm((prev) => ({ ...prev, version: event.target.value }))}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                />
-              </label>
-              <label className="text-sm">
-                <span className="mb-1 block text-slate-600">Vigente desde</span>
-                <input
-                  type="date"
-                  value={form.effectiveAt}
-                  onChange={(event) => setForm((prev) => ({ ...prev, effectiveAt: event.target.value }))}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                />
-              </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={form.published}
-                  onChange={(event) => setForm((prev) => ({ ...prev, published: event.target.checked }))}
-                />
-                Publicado
-              </label>
-            </div>
+            <fieldset disabled={!canEdit || saving} className="space-y-3 disabled:opacity-75">
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-sm md:col-span-2">
+                  <span className="mb-1 block text-slate-600">Titulo</span>
+                  <input
+                    required
+                    value={form.title}
+                    onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-slate-600">Version</span>
+                  <input
+                    required
+                    value={form.version}
+                    onChange={(event) => setForm((prev) => ({ ...prev, version: event.target.value }))}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block text-slate-600">Vigente desde</span>
+                  <input
+                    type="date"
+                    value={form.effectiveAt}
+                    onChange={(event) => setForm((prev) => ({ ...prev, effectiveAt: event.target.value }))}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </label>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={form.published}
+                    onChange={(event) => setForm((prev) => ({ ...prev, published: event.target.checked }))}
+                  />
+                  Publicado
+                </label>
+              </div>
 
-            <label className="mt-3 block text-sm">
-              <span className="mb-1 block text-slate-600">Contenido</span>
-              <textarea
-                rows={20}
-                value={form.content}
-                onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-              />
-            </label>
+              <label className="mt-3 block text-sm">
+                <span className="mb-1 block text-slate-600">Contenido</span>
+                <textarea
+                  rows={20}
+                  value={form.content}
+                  onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                />
+              </label>
+            </fieldset>
 
-            <div className="mt-3">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-600 disabled:opacity-60"
-              >
-                {saving ? 'Guardando...' : 'Guardar cambios'}
-              </button>
-            </div>
+            {canEdit && (
+              <div className="mt-3">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-600 disabled:opacity-60"
+                >
+                  {saving ? 'Guardando...' : 'Guardar cambios'}
+                </button>
+              </div>
+            )}
           </form>
 
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -165,4 +217,3 @@ function PrivacyContentPage() {
 }
 
 export default PrivacyContentPage
-

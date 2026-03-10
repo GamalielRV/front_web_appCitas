@@ -18,6 +18,8 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/terminos-y-condiciones" element={<TermsPage />} />
       <Route path="/politica-de-privacidad" element={<PrivacyPage />} />
+      <Route path="/contenido-legal" element={<LegalContentPage />} />
+      <Route path="/contenido-privacidad" element={<PrivacyContentPage />} />
       <Route
         path="/"
         element={
@@ -30,8 +32,6 @@ function App() {
         <Route path="categorias" element={<CategoriesPage />} />
         <Route path="sucursales" element={<BranchesPage />} />
         <Route path="owners" element={<OwnersPage />} />
-        <Route path="contenido-legal" element={<LegalContentPage />} />
-        <Route path="contenido-privacidad" element={<PrivacyContentPage />} />
         <Route path="soporte" element={<Navigate to="/soporte/mensajes" replace />} />
         <Route path="soporte/:tab" element={<SupportPage />} />
       </Route>

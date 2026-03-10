@@ -71,11 +71,26 @@ function normalizeTicket(item) {
     type: item.type || item.ticket_type || 'message',
     status: item.status || 'pending',
     message: item.message || item.description || '',
-    contactPhone: item.contact_phone || item.phone || '',
+    contactPhone:
+      item.contact_phone ||
+      item.sender_phone ||
+      item.requester_phone ||
+      item.phone ||
+      item.user?.phone ||
+      item.sender?.phone ||
+      '',
     requesterQrCode: item.requester_qr_code || item.qr_code || '',
     senderUserId: item.sender_user_id || item.requester_user_id || item.user_id || '',
     senderUsername:
       item.sender_username || item.requester_username || item.user_username || item.username || item.user?.username || '',
+    senderEmail:
+      item.sender_email ||
+      item.requester_email ||
+      item.user_email ||
+      item.email ||
+      item.user?.email ||
+      item.sender?.email ||
+      '',
     senderFullName:
       item.sender_full_name ||
       item.requester_full_name ||
@@ -306,11 +321,13 @@ function SupportPage() {
     }
     let requesterQrCode = ticket.requesterQrCode
     let contactPhone = ticket.contactPhone
+    let senderEmail = ticket.senderEmail
     if (!requesterQrCode) {
       try {
         const detail = normalizeTicket(await getSupportTicket(ticket.id))
         requesterQrCode = detail.requesterQrCode
         contactPhone = detail.contactPhone || contactPhone
+        senderEmail = detail.senderEmail || senderEmail
       } catch (detailError) {
         setError(toFriendlyError(detailError))
         return
@@ -329,6 +346,9 @@ function SupportPage() {
     })
     if (contactPhone) {
       params.set('phone', contactPhone)
+    }
+    if (senderEmail) {
+      params.set('email', senderEmail)
     }
     navigate(`/sucursales?${params.toString()}`)
   }

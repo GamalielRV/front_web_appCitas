@@ -80,7 +80,8 @@ function BranchesPage() {
   const supportTicketId = searchParams.get('ticket') || ''
   const supportOwnerQr = searchParams.get('ownerQr') || ''
   const supportPhone = searchParams.get('phone') || ''
-  const supportPrefillKey = `${supportSource}|${supportTicketId}|${supportOwnerQr}|${supportPhone}`
+  const supportEmail = searchParams.get('email') || ''
+  const supportPrefillKey = `${supportSource}|${supportTicketId}|${supportOwnerQr}|${supportPhone}|${supportEmail}`
 
   const filteredBranches = useMemo(
     () => branches,
@@ -138,7 +139,7 @@ function BranchesPage() {
     if (supportSource !== 'support') {
       return
     }
-    if (!supportOwnerQr && !supportPhone) {
+    if (!supportOwnerQr && !supportPhone && !supportEmail) {
       return
     }
     if (lastAppliedSupportPrefillKeyRef.current === supportPrefillKey) {
@@ -150,6 +151,7 @@ function BranchesPage() {
         ...prev,
         ownerQrCode: supportOwnerQr || prev.ownerQrCode,
         phone: supportPhone || prev.phone,
+        email: supportEmail || prev.email,
       }))
 
     if (createSectionRef.current) {
@@ -166,6 +168,11 @@ function BranchesPage() {
       try {
         const preview = await previewOwnerByQr(supportOwnerQr)
         setOwnerPreview(preview)
+        setCreateForm((prev) => ({
+          ...prev,
+          email: prev.email || preview.email || '',
+          phone: prev.phone || preview.phone || '',
+        }))
         showSuccessAlert('Solicitud cargada', `${preview.full_name} (${preview.username})`)
       } catch (previewError) {
         setOwnerPreview(null)
@@ -181,7 +188,7 @@ function BranchesPage() {
     }
 
     hydrateOwnerFromSupport()
-  }, [supportSource, supportOwnerQr, supportPhone, supportPrefillKey])
+  }, [supportSource, supportOwnerQr, supportPhone, supportEmail, supportPrefillKey])
 
   useEffect(
     () => () => {
@@ -261,6 +268,11 @@ function BranchesPage() {
     try {
       const preview = await previewOwnerByQr(createForm.ownerQrCode.trim())
       setOwnerPreview(preview)
+      setCreateForm((prev) => ({
+        ...prev,
+        email: prev.email || preview.email || '',
+        phone: prev.phone || preview.phone || '',
+      }))
       showSuccessAlert('Owner encontrado', `${preview.full_name} (${preview.username})`)
     } catch (previewError) {
       setOwnerPreview(null)
@@ -290,6 +302,11 @@ function BranchesPage() {
       setCreateForm((prev) => ({ ...prev, ownerQrCode: qrCode }))
       const preview = await previewOwnerByQr(qrCode)
       setOwnerPreview(preview)
+      setCreateForm((prev) => ({
+        ...prev,
+        email: prev.email || preview.email || '',
+        phone: prev.phone || preview.phone || '',
+      }))
       showSuccessAlert('QR leido correctamente', `${preview.full_name} (${preview.username})`)
     } catch (scanError) {
       setOwnerPreview(null)
@@ -392,6 +409,7 @@ function BranchesPage() {
         nextParams.delete('ticket')
         nextParams.delete('ownerQr')
         nextParams.delete('phone')
+        nextParams.delete('email')
         setSearchParams(nextParams, { replace: true })
       }
       await loadOrganizations(0, filters)
