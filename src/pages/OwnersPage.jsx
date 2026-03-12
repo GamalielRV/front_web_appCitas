@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import StatusBadge from '../components/StatusBadge'
-import { getOrganizations, getOwners, reassignOrganizationOwner, updateOwner } from '../services/platformAdminApi'
+import {
+  getOrganizationOwnerCandidates,
+  getOrganizations,
+  getOwners,
+  reassignOrganizationOwner,
+  updateOwner,
+} from '../services/platformAdminApi'
 import { showSuccessAlert } from '../utils/alerts'
 
 function normalizeOwner(item) {
@@ -20,10 +26,23 @@ function normalizeBranch(item) {
   }
 }
 
+function normalizeOwnerCandidate(item) {
+  return {
+    id: item.id || item.user_id || '',
+    name: item.full_name || item.name || item.username || item.email || 'Sin nombre',
+    email: item.email || '',
+    role: item.role || 'staff',
+    active: item.active ?? true,
+    isCurrentOwner: item.is_current_owner ?? false,
+  }
+}
+
 function OwnersPage() {
   const [owners, setOwners] = useState([])
   const [ownersPagination, setOwnersPagination] = useState({ limit: 20, offset: 0, total: 0 })
   const [branches, setBranches] = useState([])
+  const [ownerCandidates, setOwnerCandidates] = useState([])
+  const [loadingCandidates, setLoadingCandidates] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [reassignData, setReassignData] = useState({
@@ -56,10 +75,13 @@ function OwnersPage() {
         offset: Number(ownersResult.pagination.offset ?? offset),
         total: Number(ownersResult.pagination.total ?? normalizedOwners.length),
       })
-      setReassignData((current) => ({
-        branchId: current.branchId || normalizedBranches[0]?.id || '',
-        ownerId: current.ownerId || normalizedOwners[0]?.id || '',
-      }))
+      setReassignData((current) => {
+        const branchExists = normalizedBranches.some((branch) => branch.id === current.branchId)
+        return {
+          branchId: branchExists ? current.branchId : normalizedBranches[0]?.id || '',
+          ownerId: current.ownerId || '',
+        }
+      })
     } catch (loadError) {
       setError(loadError.message)
     } finally {
@@ -67,9 +89,42 @@ function OwnersPage() {
     }
   }, [ownersPagination.limit])
 
+  const loadOwnerCandidates = useCallback(async (branchId) => {
+    if (!branchId) {
+      setOwnerCandidates([])
+      setReassignData((prev) => ({ ...prev, ownerId: '' }))
+      return
+    }
+
+    setLoadingCandidates(true)
+    setError('')
+    try {
+      const items = await getOrganizationOwnerCandidates(branchId)
+      const normalizedCandidates = items.map(normalizeOwnerCandidate)
+      setOwnerCandidates(normalizedCandidates)
+      setReassignData((prev) => {
+        const alreadySelected = normalizedCandidates.some((candidate) => candidate.id === prev.ownerId)
+        return {
+          ...prev,
+          ownerId: alreadySelected ? prev.ownerId : normalizedCandidates[0]?.id || '',
+        }
+      })
+    } catch (loadError) {
+      setOwnerCandidates([])
+      setReassignData((prev) => ({ ...prev, ownerId: '' }))
+      setError(loadError.message)
+    } finally {
+      setLoadingCandidates(false)
+    }
+  }, [])
+
   useEffect(() => {
     loadOwners(0)
   }, [loadOwners])
+
+  useEffect(() => {
+    loadOwnerCandidates(reassignData.branchId)
+  }, [reassignData.branchId, loadOwnerCandidates])
 
   const toggleOwner = async (ownerId, active) => {
     setError('')
@@ -84,11 +139,16 @@ function OwnersPage() {
 
   const reassignBranch = async (event) => {
     event.preventDefault()
+    if (!reassignData.branchId || !reassignData.ownerId) {
+      setError('Selecciona sucursal y un candidato owner valido.')
+      return
+    }
     setError('')
     try {
       await reassignOrganizationOwner(reassignData.branchId, reassignData.ownerId)
       showSuccessAlert('Sucursal reasignada correctamente')
       await loadOwners(ownersPagination.offset)
+      await loadOwnerCandidates(reassignData.branchId)
     } catch (reassignError) {
       setError(reassignError.message)
     }
@@ -184,6 +244,9 @@ function OwnersPage() {
 
       <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 className="text-lg font-semibold">Reasignar sucursal</h3>
+        <p className="mt-1 text-xs text-slate-500">
+          Solo se permiten candidatos de esa sucursal (owner actual + staff verificado activo).
+        </p>
         <form onSubmit={reassignBranch} className="mt-4 space-y-3">
           <label className="block text-sm">
             <span className="mb-1 block text-slate-600">Sucursal</span>
@@ -204,16 +267,27 @@ function OwnersPage() {
             <select
               value={reassignData.ownerId}
               onChange={(event) => setReassignData((prev) => ({ ...prev, ownerId: event.target.value }))}
+              disabled={loadingCandidates || ownerCandidates.length === 0}
               className="w-full rounded-lg border border-slate-300 px-3 py-2"
             >
-              {owners.map((owner) => (
-                <option key={owner.id} value={owner.id}>
-                  {owner.name}
-                </option>
-              ))}
+              {loadingCandidates && <option value="">Cargando candidatos...</option>}
+              {!loadingCandidates && ownerCandidates.length === 0 && (
+                <option value="">Sin candidatos disponibles</option>
+              )}
+              {!loadingCandidates &&
+                ownerCandidates.map((owner) => (
+                  <option key={owner.id} value={owner.id}>
+                    {owner.name}
+                    {owner.isCurrentOwner ? ' (owner actual)' : ''} - {owner.role}
+                  </option>
+                ))}
             </select>
           </label>
-          <button type="submit" className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white">
+          <button
+            type="submit"
+            disabled={!reassignData.branchId || !reassignData.ownerId || loadingCandidates}
+            className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          >
             Aplicar reasignacion
           </button>
         </form>

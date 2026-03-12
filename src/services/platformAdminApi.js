@@ -79,8 +79,24 @@ export async function updateOrganization(organizationId, body) {
 }
 
 export async function reassignOrganizationOwner(organizationId, ownerId) {
-  const payload = await apiClient.put(`${PLATFORM_PREFIX}/organizations/${organizationId}/owner`, { owner_id: ownerId })
-  return unwrapData(payload)
+  try {
+    const payload = await apiClient.put(`${PLATFORM_PREFIX}/organizations/${organizationId}/owner`, {
+      owner_user_id: ownerId,
+    })
+    return unwrapData(payload)
+  } catch (error) {
+    // Backward compatibility for environments that still expect `owner_id`.
+    if (error?.status !== 422) {
+      throw error
+    }
+    const payload = await apiClient.put(`${PLATFORM_PREFIX}/organizations/${organizationId}/owner`, { owner_id: ownerId })
+    return unwrapData(payload)
+  }
+}
+
+export async function getOrganizationOwnerCandidates(organizationId) {
+  const payload = await apiClient.get(`${PLATFORM_PREFIX}/organizations/${organizationId}/owner-candidates`)
+  return unwrapItems(payload)
 }
 
 export async function getOwners(filters = {}) {
