@@ -7,7 +7,6 @@ import {
   getOrganizations,
   getOwners,
   previewOwnerByQr,
-  reassignOrganizationOwner,
   updateSupportTicket,
   updateOrganization,
 } from '../services/platformAdminApi'
@@ -34,6 +33,13 @@ function normalizeBranch(item) {
     name: item.name || item.trade_name || item.display_name || 'Sin nombre',
     categoryId: item.business_type_id || item.businessTypeId || item.business_type?.id || '',
     ownerId: item.owner_id || item.ownerId || item.owner?.id || '',
+    ownerName:
+      item.owner_full_name ||
+      item.owner?.full_name ||
+      item.owner_name ||
+      item.owner_username ||
+      item.owner?.username ||
+      'Sin owner',
     active: item.active ?? item.is_active ?? item.status === 'active',
     verified: item.verified ?? item.is_verified ?? false,
     createdAt: item.created_at || item.createdAt || '',
@@ -86,6 +92,10 @@ function BranchesPage() {
   const filteredBranches = useMemo(
     () => branches,
     [branches],
+  )
+  const ownerNameById = useMemo(
+    () => owners.reduce((acc, owner) => ({ ...acc, [owner.id]: owner.name }), {}),
+    [owners],
   )
 
   const loadReferences = async () => {
@@ -228,17 +238,6 @@ function BranchesPage() {
     try {
       await updateOrganization(id, { business_type_id: categoryId })
       showSuccessAlert('Categoria de sucursal actualizada')
-      await loadOrganizations(pagination.offset, filters)
-    } catch (actionError) {
-      setListError(actionError.message)
-    }
-  }
-
-  const updateOwner = async (id, ownerId) => {
-    setListError('')
-    try {
-      await reassignOrganizationOwner(id, ownerId)
-      showSuccessAlert('Owner reasignado')
       await loadOrganizations(pagination.offset, filters)
     } catch (actionError) {
       setListError(actionError.message)
@@ -715,17 +714,9 @@ function BranchesPage() {
                       </select>
                     </td>
                     <td className="py-3">
-                      <select
-                        value={branch.ownerId}
-                        onChange={(event) => updateOwner(branch.id, event.target.value)}
-                        className="rounded-lg border border-slate-300 px-2 py-1"
-                      >
-                        {owners.map((owner) => (
-                          <option key={owner.id} value={owner.id}>
-                            {owner.name}
-                          </option>
-                        ))}
-                      </select>
+                      <p className="font-medium text-slate-800">
+                        {branch.ownerName || ownerNameById[branch.ownerId] || 'Sin owner'}
+                      </p>
                     </td>
                     <td className="py-3">
                       <button
