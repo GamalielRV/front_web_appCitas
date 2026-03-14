@@ -133,10 +133,21 @@ function LegalContentPage() {
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-slate-500">Cargando contenido legal...</p>
         </article>
+      ) : !canEdit ? (
+        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-500">
+            Version: {form.version || 'N/A'} | Vigente:{' '}
+            {form.effectiveAt ? new Date(form.effectiveAt).toLocaleDateString('es-CR') : 'N/A'}
+          </p>
+          <h4 className="mt-2 text-base font-semibold text-slate-800">{form.title || DEFAULT_TERMS_TITLE}</h4>
+          <pre className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-700">
+            {form.content || DEFAULT_TERMS_CONTENT}
+          </pre>
+        </article>
       ) : (
         <div className="grid gap-5 xl:grid-cols-[1.15fr_1fr]">
           <form onSubmit={onSubmit} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <fieldset disabled={!canEdit || saving} className="space-y-3 disabled:opacity-75">
+            <fieldset disabled={saving} className="space-y-3">
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="text-sm md:col-span-2">
                   <span className="mb-1 block text-slate-600">Titulo</span>
@@ -186,17 +197,15 @@ function LegalContentPage() {
               </label>
             </fieldset>
 
-            {canEdit && (
-              <div className="mt-3">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-600 disabled:opacity-60"
-                >
-                  {saving ? 'Guardando...' : 'Guardar cambios'}
-                </button>
-              </div>
-            )}
+            <div className="mt-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-600 disabled:opacity-60"
+              >
+                {saving ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+            </div>
           </form>
 
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
