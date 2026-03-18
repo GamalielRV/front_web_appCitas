@@ -50,6 +50,18 @@ export async function deleteBusinessType(businessTypeId) {
   return unwrapData(payload)
 }
 
+export async function uploadBusinessTypeImage(businessTypeId, imageFile) {
+  const formData = new FormData()
+  formData.append('image', imageFile)
+  const payload = await apiClient.post(`${PLATFORM_PREFIX}/business-types/${businessTypeId}/image`, formData)
+  return unwrapData(payload)
+}
+
+export async function deleteBusinessTypeImage(businessTypeId) {
+  const payload = await apiClient.delete(`${PLATFORM_PREFIX}/business-types/${businessTypeId}/image`)
+  return unwrapData(payload)
+}
+
 export async function getOrganizations(filters = {}) {
   const payload = await apiClient.get(`${PLATFORM_PREFIX}/organizations`, filters)
   return {

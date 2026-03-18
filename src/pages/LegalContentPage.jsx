@@ -98,32 +98,19 @@ function LegalContentPage() {
               Este contenido se usa para terminos y condiciones publicos en web y app movil.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span
-              className={[
-                'rounded-full px-2 py-1 text-xs font-semibold',
-                canEdit ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800',
-              ].join(' ')}
-            >
-              {canEdit ? 'Modo edicion' : 'Solo lectura'}
-            </span>
-            {!canEdit && (
-              <Link
-                to="/login"
-                className="rounded-lg bg-teal-700 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-600"
-              >
-                Iniciar sesion
-              </Link>
-            )}
-            {canEdit && (
+          {canEdit && (
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">
+                Modo edicion
+              </span>
               <Link
                 to="/"
                 className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Ir al panel
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </article>
 

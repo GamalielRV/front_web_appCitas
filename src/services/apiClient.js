@@ -235,7 +235,9 @@ export async function ensureActiveSession() {
 async function request(path, options = {}) {
   const token = getStoredAccessToken()
   const { query, skipAuth, retryOnAuthFailure = true, _retry = false, ...fetchOptions } = options
-  const isJsonBody = fetchOptions.body && typeof fetchOptions.body !== 'string'
+  const isFormDataBody =
+    typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData
+  const isJsonBody = Boolean(fetchOptions.body) && !isFormDataBody && typeof fetchOptions.body !== 'string'
 
   const response = await fetch(buildUrl(path, query), {
     headers: {
