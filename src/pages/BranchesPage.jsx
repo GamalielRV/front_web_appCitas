@@ -87,7 +87,10 @@ function BranchesPage() {
   const supportOwnerQr = searchParams.get('ownerQr') || ''
   const supportPhone = searchParams.get('phone') || ''
   const supportEmail = searchParams.get('email') || ''
-  const supportPrefillKey = `${supportSource}|${supportTicketId}|${supportOwnerQr}|${supportPhone}|${supportEmail}`
+  const supportCategoryId = searchParams.get('categoryId') || ''
+  const supportCategoryName = searchParams.get('categoryName') || ''
+  const supportPrefillKey = `${supportSource}|${supportTicketId}|${supportOwnerQr}|${supportPhone}|${supportEmail}|${supportCategoryId}|${supportCategoryName}`
+  const isSupportCategoryLocked = supportSource === 'support' && Boolean(supportCategoryId)
 
   const filteredBranches = useMemo(
     () => branches,
@@ -149,7 +152,7 @@ function BranchesPage() {
     if (supportSource !== 'support') {
       return
     }
-    if (!supportOwnerQr && !supportPhone && !supportEmail) {
+    if (!supportOwnerQr && !supportPhone && !supportEmail && !supportCategoryId) {
       return
     }
     if (lastAppliedSupportPrefillKeyRef.current === supportPrefillKey) {
@@ -159,6 +162,7 @@ function BranchesPage() {
     lastAppliedSupportPrefillKeyRef.current = supportPrefillKey
       setCreateForm((prev) => ({
         ...prev,
+        businessTypeId: supportCategoryId || prev.businessTypeId,
         ownerQrCode: supportOwnerQr || prev.ownerQrCode,
         phone: supportPhone || prev.phone,
         email: supportEmail || prev.email,
@@ -198,7 +202,7 @@ function BranchesPage() {
     }
 
     hydrateOwnerFromSupport()
-  }, [supportSource, supportOwnerQr, supportPhone, supportEmail, supportPrefillKey])
+  }, [supportSource, supportOwnerQr, supportPhone, supportEmail, supportCategoryId, supportPrefillKey])
 
   useEffect(
     () => () => {
@@ -409,6 +413,8 @@ function BranchesPage() {
         nextParams.delete('ownerQr')
         nextParams.delete('phone')
         nextParams.delete('email')
+        nextParams.delete('categoryId')
+        nextParams.delete('categoryName')
         setSearchParams(nextParams, { replace: true })
       }
       await loadOrganizations(0, filters)
@@ -427,6 +433,7 @@ function BranchesPage() {
           <div className="mt-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
             Solicitud enlazada desde soporte {supportTicketId ? `(ticket ${supportTicketId})` : ''}. Datos del
             solicitante precargados.
+            {supportCategoryId ? ` Categoria: ${supportCategoryName || 'asignada desde ticket'}.` : ''}
           </div>
         )}
         <form onSubmit={handleCreateBranch} className="mt-3 grid gap-3 md:grid-cols-3">
@@ -444,6 +451,7 @@ function BranchesPage() {
             <select
               value={createForm.businessTypeId}
               onChange={(event) => setCreateForm((prev) => ({ ...prev, businessTypeId: event.target.value }))}
+              disabled={isSupportCategoryLocked}
               className="w-full rounded-lg border border-slate-300 px-3 py-2"
             >
               {categories.map((category) => (
@@ -452,6 +460,11 @@ function BranchesPage() {
                 </option>
               ))}
             </select>
+            {isSupportCategoryLocked && (
+              <span className="mt-1 block text-xs text-slate-500">
+                Categoria bloqueada por la solicitud recibida desde soporte.
+              </span>
+            )}
           </label>
           <label className="text-sm">
             <span className="mb-1 block text-slate-600">QR del owner *</span>

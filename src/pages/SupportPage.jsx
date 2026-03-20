@@ -71,6 +71,12 @@ function normalizeTicket(item) {
     type: item.type || item.ticket_type || 'message',
     status: item.status || 'pending',
     message: item.message || item.description || '',
+    businessTypeId: item.business_type_id || item.businessType?.id || '',
+    businessTypeName:
+      item.business_type_name ||
+      item.businessType?.name ||
+      item.business_type?.name ||
+      '',
     contactPhone:
       item.contact_phone ||
       item.sender_phone ||
@@ -322,12 +328,16 @@ function SupportPage() {
     let requesterQrCode = ticket.requesterQrCode
     let contactPhone = ticket.contactPhone
     let senderEmail = ticket.senderEmail
+    let businessTypeId = ticket.businessTypeId
+    let businessTypeName = ticket.businessTypeName
     if (!requesterQrCode) {
       try {
         const detail = normalizeTicket(await getSupportTicket(ticket.id))
         requesterQrCode = detail.requesterQrCode
         contactPhone = detail.contactPhone || contactPhone
         senderEmail = detail.senderEmail || senderEmail
+        businessTypeId = detail.businessTypeId || businessTypeId
+        businessTypeName = detail.businessTypeName || businessTypeName
       } catch (detailError) {
         setError(toFriendlyError(detailError))
         return
@@ -349,6 +359,12 @@ function SupportPage() {
     }
     if (senderEmail) {
       params.set('email', senderEmail)
+    }
+    if (businessTypeId) {
+      params.set('categoryId', businessTypeId)
+    }
+    if (businessTypeName) {
+      params.set('categoryName', businessTypeName)
     }
     navigate(`/sucursales?${params.toString()}`)
   }
@@ -436,6 +452,9 @@ function SupportPage() {
                       <span className="font-semibold">Telefono:</span> {ticket.contactPhone || 'N/A'}
                     </p>
                   </div>
+                  <p className="mt-1 text-sm text-slate-600">
+                    <span className="font-semibold">Categoria solicitada:</span> {ticket.businessTypeName || 'N/A'}
+                  </p>
                   <p className="mt-1 text-sm">
                     <span className="font-semibold">Estado:</span>{' '}
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusPillClass(ticket.status)}`}>
