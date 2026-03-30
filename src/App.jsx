@@ -11,6 +11,7 @@ import PrivacyContentPage from './pages/PrivacyContentPage'
 import PrivacyPage from './pages/PrivacyPage'
 import SupportPage from './pages/SupportPage'
 import TermsPage from './pages/TermsPage'
+import AccountDeletionRequestPage from './pages/AccountDeletionRequestPage'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       <Route path="/politica-de-privacidad" element={<PrivacyPage />} />
       <Route path="/contenido-legal" element={<LegalContentPage />} />
       <Route path="/contenido-privacidad" element={<PrivacyContentPage />} />
+      <Route path="/eliminar-cuenta" element={<AccountDeletionRequestPage />} />
       <Route
         path="/"
         element={
