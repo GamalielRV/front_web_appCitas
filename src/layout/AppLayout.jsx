@@ -11,6 +11,7 @@ const navItems = [
   { to: '/contenido-privacidad', label: 'Contenido privacidad' },
   { to: '/soporte/mensajes', label: 'Soporte mensajes' },
   { to: '/soporte/solicitudes', label: 'Soporte solicitudes' },
+  { to: '/soporte/reportes-web', label: 'Reportes web' },
 ]
 
 const routeTitles = {
@@ -22,6 +23,7 @@ const routeTitles = {
   '/contenido-privacidad': 'Contenido de privacidad',
   '/soporte/mensajes': 'Soporte: mensajes',
   '/soporte/solicitudes': 'Soporte: solicitudes',
+  '/soporte/reportes-web': 'Soporte: reportes web',
 }
 
 function AppLayout() {

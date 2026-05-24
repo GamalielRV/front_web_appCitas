@@ -38,6 +38,8 @@ function isSupportLikeNotification(notification) {
     haystack.includes('soporte') ||
     haystack.includes('ticket') ||
     haystack.includes('branch_registration') ||
+    haystack.includes('problem_report') ||
+    haystack.includes('reporte') ||
     haystack.includes('message')
   )
 }
@@ -45,12 +47,21 @@ function isSupportLikeNotification(notification) {
 function getSupportTarget(notification) {
   const ticketId = notification.data.support_ticket_id || notification.data.ticket_id || ''
   const source = `${notification.type} ${notification.title} ${notification.data.support_type || ''}`.toLowerCase()
+  const isProblemReport =
+    source.includes('problem_report') ||
+    source.includes('problem report') ||
+    source.includes('reporte') ||
+    notification.data.source === 'public_web'
   const isBranchRequest =
     source.includes('branch') ||
     source.includes('registration') ||
     source.includes('sucursal') ||
     Boolean(notification.data.contact_phone)
-  const basePath = isBranchRequest ? '/soporte/solicitudes' : '/soporte/mensajes'
+  const basePath = isProblemReport
+    ? '/soporte/reportes-web'
+    : isBranchRequest
+      ? '/soporte/solicitudes'
+      : '/soporte/mensajes'
   return ticketId ? `${basePath}?ticket=${encodeURIComponent(ticketId)}` : basePath
 }
 

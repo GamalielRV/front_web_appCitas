@@ -35,6 +35,21 @@ const ticketStatusConfig = {
       closed: 'Concluida',
     },
   },
+  problem_report: {
+    options: [
+      { value: 'all', label: 'Todos' },
+      { value: 'pending', label: 'Recibido' },
+      { value: 'in_review', label: 'En revision' },
+      { value: 'resolved', label: 'Resuelto' },
+      { value: 'closed', label: 'Cerrado' },
+    ],
+    labels: {
+      pending: 'Recibido',
+      in_review: 'En revision',
+      resolved: 'Resuelto',
+      closed: 'Cerrado',
+    },
+  },
 }
 
 const ticketStatusClasses = {
@@ -55,6 +70,20 @@ const supportTabs = {
     title: 'Bandeja de solicitudes de sucursal',
     empty: 'No hay solicitudes para mostrar.',
   },
+  'reportes-web': {
+    apiType: 'problem_report',
+    title: 'Bandeja de reportes web',
+    empty: 'No hay reportes web para mostrar.',
+  },
+}
+
+const problemCategoryLabels = {
+  account_access: 'Acceso a cuenta',
+  booking: 'Reservas o citas',
+  payment: 'Pagos',
+  business: 'Sucursal o negocio',
+  privacy: 'Privacidad',
+  other: 'Otro',
 }
 
 function toFriendlyError(error) {
@@ -69,6 +98,8 @@ function normalizeTicket(item) {
   return {
     id: item.id || item.ticket_id || '',
     type: item.type || item.ticket_type || 'message',
+    source: item.source || '',
+    problemCategory: item.problem_category || item.problemCategory || '',
     status: item.status || 'pending',
     message: item.message || item.description || '',
     businessTypeId: item.business_type_id || item.businessType?.id || '',
@@ -99,6 +130,7 @@ function normalizeTicket(item) {
       '',
     senderFullName:
       item.sender_full_name ||
+      item.sender_name ||
       item.requester_full_name ||
       item.user_full_name ||
       item.full_name ||
@@ -125,7 +157,7 @@ function getStatusLabelByType(type, status) {
 function SupportPage() {
   const navigate = useNavigate()
   const { tab = 'mensajes' } = useParams()
-  const activeTab = tab === 'solicitudes' ? 'solicitudes' : 'mensajes'
+  const activeTab = supportTabs[tab] ? tab : 'mensajes'
   const fixedType = supportTabs[activeTab].apiType
   const statusOptions = useMemo(() => getStatusOptionListByType(fixedType), [fixedType])
   const [searchParams, setSearchParams] = useSearchParams()
@@ -233,7 +265,7 @@ function SupportPage() {
   useEffect(() => {
     const handleSupportNotification = () => {
       loadTickets(0)
-      if (activeTab === 'mensajes' && selectedTicketId) {
+      if (activeTab !== 'solicitudes' && selectedTicketId) {
         loadTicketDetail()
       }
     }
@@ -576,6 +608,12 @@ function SupportPage() {
                               <span className="font-semibold">Telefono:</span> {ticket.contactPhone || 'N/A'}
                             </p>
                           </div>
+                          {ticket.type === 'problem_report' && (
+                            <p className="mt-1 text-sm text-slate-600">
+                              <span className="font-semibold">Categoria:</span>{' '}
+                              {problemCategoryLabels[ticket.problemCategory] || ticket.problemCategory || 'N/A'}
+                            </p>
+                          )}
                         </button>
 
                         <button
@@ -644,6 +682,23 @@ function SupportPage() {
                   <p>
                     <span className="font-semibold">Telefono:</span> {selectedTicket?.contactPhone || 'N/A'}
                   </p>
+                  {selectedTicket?.type === 'problem_report' && (
+                    <>
+                      <p>
+                        <span className="font-semibold">Email:</span> {selectedTicket?.senderEmail || 'N/A'}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Categoria:</span>{' '}
+                        {problemCategoryLabels[selectedTicket?.problemCategory] ||
+                          selectedTicket?.problemCategory ||
+                          'N/A'}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Origen:</span>{' '}
+                        {selectedTicket?.source === 'public_web' ? 'Web publica' : selectedTicket?.source || 'N/A'}
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 <div className="rounded-lg border border-slate-200 p-3">

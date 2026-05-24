@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage'
 import LegalContentPage from './pages/LegalContentPage'
 import LoginPage from './pages/LoginPage'
 import OwnersPage from './pages/OwnersPage'
+import ProblemReportPage from './pages/ProblemReportPage'
 import PrivacyContentPage from './pages/PrivacyContentPage'
 import PrivacyPage from './pages/PrivacyPage'
 import SupportPage from './pages/SupportPage'
@@ -22,6 +23,7 @@ function App() {
       <Route path="/contenido-legal" element={<LegalContentPage />} />
       <Route path="/contenido-privacidad" element={<PrivacyContentPage />} />
       <Route path="/eliminar-cuenta" element={<AccountDeletionRequestPage />} />
+      <Route path="/reportar-problema" element={<ProblemReportPage />} />
       <Route
         path="/"
         element={
