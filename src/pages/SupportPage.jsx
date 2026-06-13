@@ -102,6 +102,14 @@ function normalizeTicket(item) {
     problemCategory: item.problem_category || item.problemCategory || '',
     status: item.status || 'pending',
     message: item.message || item.description || '',
+    branchName: item.branch_name || item.branchName || '',
+    address: item.address || item.branch_address || '',
+    latitude: item.latitude ?? item.branch_latitude ?? '',
+    longitude: item.longitude ?? item.branch_longitude ?? '',
+    countryCode: item.country_code || item.countryCode || '',
+    branchPhone: item.branch_phone || item.branchPhone || '',
+    dayStart: item.day_start || item.dayStart || '',
+    dayEnd: item.day_end || item.dayEnd || '',
     businessTypeId: item.business_type_id || item.businessType?.id || '',
     businessTypeName:
       item.business_type_name ||
@@ -362,15 +370,32 @@ function SupportPage() {
     let senderEmail = ticket.senderEmail
     let businessTypeId = ticket.businessTypeId
     let businessTypeName = ticket.businessTypeName
-    if (!requesterQrCode) {
-      try {
-        const detail = normalizeTicket(await getSupportTicket(ticket.id))
-        requesterQrCode = detail.requesterQrCode
-        contactPhone = detail.contactPhone || contactPhone
-        senderEmail = detail.senderEmail || senderEmail
-        businessTypeId = detail.businessTypeId || businessTypeId
-        businessTypeName = detail.businessTypeName || businessTypeName
-      } catch (detailError) {
+    let branchName = ticket.branchName
+    let address = ticket.address
+    let latitude = ticket.latitude
+    let longitude = ticket.longitude
+    let countryCode = ticket.countryCode
+    let branchPhone = ticket.branchPhone
+    let dayStart = ticket.dayStart
+    let dayEnd = ticket.dayEnd
+
+    try {
+      const detail = normalizeTicket(await getSupportTicket(ticket.id))
+      requesterQrCode = detail.requesterQrCode || requesterQrCode
+      contactPhone = detail.contactPhone || contactPhone
+      senderEmail = detail.senderEmail || senderEmail
+      businessTypeId = detail.businessTypeId || businessTypeId
+      businessTypeName = detail.businessTypeName || businessTypeName
+      branchName = detail.branchName || branchName
+      address = detail.address || address
+      latitude = detail.latitude !== '' ? detail.latitude : latitude
+      longitude = detail.longitude !== '' ? detail.longitude : longitude
+      countryCode = detail.countryCode || countryCode
+      branchPhone = detail.branchPhone || branchPhone
+      dayStart = detail.dayStart || dayStart
+      dayEnd = detail.dayEnd || dayEnd
+    } catch (detailError) {
+      if (!requesterQrCode) {
         setError(toFriendlyError(detailError))
         return
       }
@@ -397,6 +422,30 @@ function SupportPage() {
     }
     if (businessTypeName) {
       params.set('categoryName', businessTypeName)
+    }
+    if (branchName) {
+      params.set('branchName', branchName)
+    }
+    if (address) {
+      params.set('address', address)
+    }
+    if (latitude !== '' && latitude !== null && latitude !== undefined) {
+      params.set('latitude', String(latitude))
+    }
+    if (longitude !== '' && longitude !== null && longitude !== undefined) {
+      params.set('longitude', String(longitude))
+    }
+    if (countryCode) {
+      params.set('countryCode', countryCode)
+    }
+    if (branchPhone) {
+      params.set('branchPhone', branchPhone)
+    }
+    if (dayStart) {
+      params.set('dayStart', dayStart)
+    }
+    if (dayEnd) {
+      params.set('dayEnd', dayEnd)
     }
     navigate(`/sucursales?${params.toString()}`)
   }
@@ -487,6 +536,11 @@ function SupportPage() {
                   <p className="mt-1 text-sm text-slate-600">
                     <span className="font-semibold">Categoria solicitada:</span> {ticket.businessTypeName || 'N/A'}
                   </p>
+                  {ticket.branchName && (
+                    <p className="mt-1 text-sm text-slate-600">
+                      <span className="font-semibold">Sucursal solicitada:</span> {ticket.branchName}
+                    </p>
+                  )}
                   <p className="mt-1 text-sm">
                     <span className="font-semibold">Estado:</span>{' '}
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusPillClass(ticket.status)}`}>

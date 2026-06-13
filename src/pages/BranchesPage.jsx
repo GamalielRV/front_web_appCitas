@@ -46,6 +46,13 @@ function normalizeBranch(item) {
   }
 }
 
+function normalizeTimeForInput(value) {
+  if (!value) {
+    return ''
+  }
+  return String(value).slice(0, 5)
+}
+
 function BranchesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const createSectionRef = useRef(null)
@@ -72,6 +79,7 @@ function BranchesPage() {
     longitude: '',
     dayStart: '',
     dayEnd: '',
+    countryCode: '',
     phone: '',
     email: '',
     active: true,
@@ -89,7 +97,31 @@ function BranchesPage() {
   const supportEmail = searchParams.get('email') || ''
   const supportCategoryId = searchParams.get('categoryId') || ''
   const supportCategoryName = searchParams.get('categoryName') || ''
-  const supportPrefillKey = `${supportSource}|${supportTicketId}|${supportOwnerQr}|${supportPhone}|${supportEmail}|${supportCategoryId}|${supportCategoryName}`
+  const supportBranchName = searchParams.get('branchName') || ''
+  const supportAddress = searchParams.get('address') || ''
+  const supportLatitude = searchParams.get('latitude') || ''
+  const supportLongitude = searchParams.get('longitude') || ''
+  const supportCountryCode = searchParams.get('countryCode') || ''
+  const supportBranchPhone = searchParams.get('branchPhone') || ''
+  const supportDayStart = searchParams.get('dayStart') || ''
+  const supportDayEnd = searchParams.get('dayEnd') || ''
+  const supportPrefillKey = [
+    supportSource,
+    supportTicketId,
+    supportOwnerQr,
+    supportPhone,
+    supportEmail,
+    supportCategoryId,
+    supportCategoryName,
+    supportBranchName,
+    supportAddress,
+    supportLatitude,
+    supportLongitude,
+    supportCountryCode,
+    supportBranchPhone,
+    supportDayStart,
+    supportDayEnd,
+  ].join('|')
   const isSupportCategoryLocked = supportSource === 'support' && Boolean(supportCategoryId)
 
   const filteredBranches = useMemo(
@@ -152,7 +184,20 @@ function BranchesPage() {
     if (supportSource !== 'support') {
       return
     }
-    if (!supportOwnerQr && !supportPhone && !supportEmail && !supportCategoryId) {
+    if (
+      !supportOwnerQr &&
+      !supportPhone &&
+      !supportEmail &&
+      !supportCategoryId &&
+      !supportBranchName &&
+      !supportAddress &&
+      !supportLatitude &&
+      !supportLongitude &&
+      !supportCountryCode &&
+      !supportBranchPhone &&
+      !supportDayStart &&
+      !supportDayEnd
+    ) {
       return
     }
     if (lastAppliedSupportPrefillKeyRef.current === supportPrefillKey) {
@@ -162,9 +207,16 @@ function BranchesPage() {
     lastAppliedSupportPrefillKeyRef.current = supportPrefillKey
       setCreateForm((prev) => ({
         ...prev,
+        name: supportBranchName || prev.name,
         businessTypeId: supportCategoryId || prev.businessTypeId,
         ownerQrCode: supportOwnerQr || prev.ownerQrCode,
-        phone: supportPhone || prev.phone,
+        address: supportAddress || prev.address,
+        latitude: supportLatitude || prev.latitude,
+        longitude: supportLongitude || prev.longitude,
+        countryCode: supportCountryCode || prev.countryCode,
+        dayStart: normalizeTimeForInput(supportDayStart) || prev.dayStart,
+        dayEnd: normalizeTimeForInput(supportDayEnd) || prev.dayEnd,
+        phone: supportBranchPhone || supportPhone || prev.phone,
         email: supportEmail || prev.email,
       }))
 
@@ -202,7 +254,22 @@ function BranchesPage() {
     }
 
     hydrateOwnerFromSupport()
-  }, [supportSource, supportOwnerQr, supportPhone, supportEmail, supportCategoryId, supportPrefillKey])
+  }, [
+    supportSource,
+    supportOwnerQr,
+    supportPhone,
+    supportEmail,
+    supportCategoryId,
+    supportBranchName,
+    supportAddress,
+    supportLatitude,
+    supportLongitude,
+    supportCountryCode,
+    supportBranchPhone,
+    supportDayStart,
+    supportDayEnd,
+    supportPrefillKey,
+  ])
 
   useEffect(
     () => () => {
@@ -364,6 +431,7 @@ function BranchesPage() {
         : {}),
       ...(createForm.dayStart ? { day_start: createForm.dayStart } : {}),
       ...(createForm.dayEnd ? { day_end: createForm.dayEnd } : {}),
+      ...(createForm.countryCode.trim() ? { country_code: createForm.countryCode.trim() } : {}),
       ...(createForm.phone.trim() ? { phone: createForm.phone.trim() } : {}),
       ...(createForm.email.trim() ? { email: createForm.email.trim() } : {}),
     }
@@ -396,6 +464,7 @@ function BranchesPage() {
         longitude: '',
         dayStart: '',
         dayEnd: '',
+        countryCode: '',
         phone: '',
         email: '',
         active: true,
@@ -415,6 +484,14 @@ function BranchesPage() {
         nextParams.delete('email')
         nextParams.delete('categoryId')
         nextParams.delete('categoryName')
+        nextParams.delete('branchName')
+        nextParams.delete('address')
+        nextParams.delete('latitude')
+        nextParams.delete('longitude')
+        nextParams.delete('countryCode')
+        nextParams.delete('branchPhone')
+        nextParams.delete('dayStart')
+        nextParams.delete('dayEnd')
         setSearchParams(nextParams, { replace: true })
       }
       await loadOrganizations(0, filters)
@@ -539,6 +616,15 @@ function BranchesPage() {
               type="time"
               value={createForm.dayEnd}
               onChange={(event) => setCreateForm((prev) => ({ ...prev, dayEnd: event.target.value }))}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block text-slate-600">Codigo pais</span>
+            <input
+              value={createForm.countryCode}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, countryCode: event.target.value }))}
+              placeholder="506"
               className="w-full rounded-lg border border-slate-300 px-3 py-2"
             />
           </label>
