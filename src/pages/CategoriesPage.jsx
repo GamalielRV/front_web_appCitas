@@ -17,6 +17,9 @@ const emptyForm = {
   description: '',
   imageUrl: '',
   imageUrlPresigned: '',
+  monthlyBranchFee: '',
+  monthlyStaffFee: '',
+  billingCurrency: 'CRC',
   active: true,
 }
 
@@ -28,6 +31,9 @@ function normalizeCategory(item) {
     description: item.description || '',
     imageUrl: item.image_url || '',
     imageUrlPresigned: item.image_url_presigned || '',
+    monthlyBranchFee: item.monthly_branch_fee ?? '',
+    monthlyStaffFee: item.monthly_staff_fee ?? '',
+    billingCurrency: item.billing_currency || 'CRC',
     active: item.active ?? item.is_active ?? true,
   }
 }
@@ -105,6 +111,9 @@ function CategoriesPage() {
       slug: normalizedSlug,
       description: form.description || null,
       active: form.active,
+      monthly_branch_fee: Number(form.monthlyBranchFee || 0),
+      monthly_staff_fee: Number(form.monthlyStaffFee || 0),
+      billing_currency: form.billingCurrency || 'CRC',
     }
 
     setSaving(true)
@@ -231,6 +240,7 @@ function CategoriesPage() {
                 <th className="pb-2">Nombre</th>
                 <th className="pb-2">Imagen</th>
                 <th className="pb-2">Slug</th>
+                <th className="pb-2">Cobro</th>
                 <th className="pb-2">Descripcion</th>
                 <th className="pb-2">Estado</th>
                 <th className="pb-2">Acciones</th>
@@ -239,7 +249,7 @@ function CategoriesPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td className="py-4 text-slate-500" colSpan={6}>
+                  <td className="py-4 text-slate-500" colSpan={7}>
                     Cargando categorias...
                   </td>
                 </tr>
@@ -264,6 +274,12 @@ function CategoriesPage() {
                       )}
                     </td>
                     <td className="py-3">{category.slug || 'N/A'}</td>
+                    <td className="py-3">
+                      <p>{category.billingCurrency} {Number(category.monthlyBranchFee || 0).toFixed(2)}</p>
+                      <p className="text-xs text-slate-500">
+                        Staff: {category.billingCurrency} {Number(category.monthlyStaffFee || 0).toFixed(2)}
+                      </p>
+                    </td>
                     <td className="py-3">{category.description || 'Sin descripcion'}</td>
                     <td className="py-3">
                       <StatusBadge active={category.active} />
@@ -377,6 +393,39 @@ function CategoriesPage() {
               className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-teal-600"
             />
           </label>
+          <div className="grid gap-3 md:grid-cols-3">
+            <label className="block text-sm">
+              <span className="mb-1 block text-slate-600">Mensualidad sucursal</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.monthlyBranchFee}
+                onChange={(event) => updateField('monthlyBranchFee', event.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-teal-600"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-slate-600">Mensualidad por staff</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.monthlyStaffFee}
+                onChange={(event) => updateField('monthlyStaffFee', event.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-teal-600"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-slate-600">Moneda</span>
+              <input
+                value={form.billingCurrency}
+                onChange={(event) => updateField('billingCurrency', event.target.value.toUpperCase())}
+                maxLength={3}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-teal-600"
+              />
+            </label>
+          </div>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"

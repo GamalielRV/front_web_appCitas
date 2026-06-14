@@ -42,6 +42,8 @@ function normalizeBranch(item) {
       'Sin owner',
     active: item.active ?? item.is_active ?? item.status === 'active',
     verified: item.verified ?? item.is_verified ?? false,
+    billingIsFree: Boolean(item.billing_is_free),
+    billingFreeUntil: item.billing_free_until || '',
     createdAt: item.created_at || item.createdAt || '',
   }
 }
@@ -82,6 +84,8 @@ function BranchesPage() {
     countryCode: '',
     phone: '',
     email: '',
+    billingIsFree: false,
+    billingFreeUntil: '',
     active: true,
   })
   const [ownerPreview, setOwnerPreview] = useState(null)
@@ -434,6 +438,8 @@ function BranchesPage() {
       ...(createForm.countryCode.trim() ? { country_code: createForm.countryCode.trim() } : {}),
       ...(createForm.phone.trim() ? { phone: createForm.phone.trim() } : {}),
       ...(createForm.email.trim() ? { email: createForm.email.trim() } : {}),
+      billing_is_free: createForm.billingIsFree,
+      ...(createForm.billingFreeUntil ? { billing_free_until: createForm.billingFreeUntil } : {}),
     }
 
     setCreating(true)
@@ -467,6 +473,8 @@ function BranchesPage() {
         countryCode: '',
         phone: '',
         email: '',
+        billingIsFree: false,
+        billingFreeUntil: '',
         active: true,
       }))
       setOwnerPreview(null)
@@ -648,6 +656,24 @@ function BranchesPage() {
           <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-700">
             <input
               type="checkbox"
+              checked={createForm.billingIsFree}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, billingIsFree: event.target.checked }))}
+            />
+            Modo gratis
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block text-slate-600">Gratis hasta</span>
+            <input
+              type="date"
+              value={createForm.billingFreeUntil}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, billingFreeUntil: event.target.value }))}
+              disabled={!createForm.billingIsFree}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100"
+            />
+          </label>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
               checked={createForm.active}
               onChange={(event) => setCreateForm((prev) => ({ ...prev, active: event.target.checked }))}
             />
@@ -774,6 +800,7 @@ function BranchesPage() {
                 <th className="pb-2">Estado</th>
                 <th className="pb-2">Verificada</th>
                 <th className="pb-2">Categoria</th>
+                <th className="pb-2">Cobro</th>
                 <th className="pb-2">Owner</th>
                 <th className="pb-2">Acciones</th>
               </tr>
@@ -781,7 +808,7 @@ function BranchesPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td className="py-4 text-slate-500" colSpan={6}>
+                  <td className="py-4 text-slate-500" colSpan={7}>
                     Cargando sucursales...
                   </td>
                 </tr>
@@ -811,6 +838,14 @@ function BranchesPage() {
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td className="py-3">
+                      <StatusBadge active={branch.billingIsFree} activeText="Gratis" inactiveText="Normal" />
+                      {branch.billingIsFree && (
+                        <p className="mt-1 text-xs text-slate-500">
+                          Hasta: {branch.billingFreeUntil || 'Sin fecha'}
+                        </p>
+                      )}
                     </td>
                     <td className="py-3">
                       <p className="font-medium text-slate-800">

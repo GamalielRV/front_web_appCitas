@@ -13,6 +13,7 @@ import PrivacyPage from './pages/PrivacyPage'
 import SupportPage from './pages/SupportPage'
 import TermsPage from './pages/TermsPage'
 import AccountDeletionRequestPage from './pages/AccountDeletionRequestPage'
+import BillingPage from './pages/BillingPage'
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
         <Route path="categorias" element={<CategoriesPage />} />
         <Route path="sucursales" element={<BranchesPage />} />
         <Route path="owners" element={<OwnersPage />} />
+        <Route path="cobros" element={<BillingPage />} />
         <Route path="soporte" element={<Navigate to="/soporte/mensajes" replace />} />
         <Route path="soporte/:tab" element={<SupportPage />} />
       </Route>

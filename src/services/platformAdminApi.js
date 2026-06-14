@@ -142,6 +142,37 @@ export async function getAuditEvents(filters = {}) {
   }
 }
 
+export async function getBillingOrganizations(filters = {}) {
+  const payload = await apiClient.get(`${PLATFORM_PREFIX}/billing/organizations`, filters)
+  return {
+    items: unwrapItems(payload),
+    pagination: unwrapPagination(payload),
+  }
+}
+
+export async function updateBillingOrganizationSettings(organizationId, body) {
+  const payload = await apiClient.patch(`${PLATFORM_PREFIX}/billing/organizations/${organizationId}/settings`, body)
+  return unwrapData(payload)
+}
+
+export async function getBillingInvoices(filters = {}) {
+  const payload = await apiClient.get(`${PLATFORM_PREFIX}/billing/invoices`, filters)
+  return {
+    items: unwrapItems(payload),
+    pagination: unwrapPagination(payload),
+  }
+}
+
+export async function getBillingInvoice(invoiceId) {
+  const payload = await apiClient.get(`${PLATFORM_PREFIX}/billing/invoices/${invoiceId}`)
+  return unwrapData(payload)
+}
+
+export async function reviewBillingPayment(paymentId, body) {
+  const payload = await apiClient.post(`${PLATFORM_PREFIX}/billing/payments/${paymentId}/review`, body)
+  return unwrapData(payload)
+}
+
 export async function getSupportTickets(filters = {}) {
   const payload = await apiClient.get(`${PLATFORM_PREFIX}/support/tickets`, filters)
   return {
