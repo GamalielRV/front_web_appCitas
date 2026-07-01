@@ -14,6 +14,7 @@ import SupportPage from './pages/SupportPage'
 import TermsPage from './pages/TermsPage'
 import AccountDeletionRequestPage from './pages/AccountDeletionRequestPage'
 import BillingPage from './pages/BillingPage'
+import WorkProfileRedirectPage from './pages/WorkProfileRedirectPage'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Route path="/contenido-privacidad" element={<PrivacyContentPage />} />
       <Route path="/eliminar-cuenta" element={<AccountDeletionRequestPage />} />
       <Route path="/reportar-problema" element={<ProblemReportPage />} />
+      <Route path="/perfil-trabajo" element={<WorkProfileRedirectPage />} />
       <Route
         path="/"
         element={
