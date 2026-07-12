@@ -20,6 +20,7 @@ const emptyForm = {
   monthlyBranchFee: '',
   monthlyStaffFee: '',
   billingCurrency: 'CRC',
+  staffCollectionsEnabled: false,
   active: true,
 }
 
@@ -34,6 +35,7 @@ function normalizeCategory(item) {
     monthlyBranchFee: item.monthly_branch_fee ?? '',
     monthlyStaffFee: item.monthly_staff_fee ?? '',
     billingCurrency: item.billing_currency || 'CRC',
+    staffCollectionsEnabled: Boolean(item.staff_collections_enabled),
     active: item.active ?? item.is_active ?? true,
   }
 }
@@ -114,6 +116,7 @@ function CategoriesPage() {
       monthly_branch_fee: Number(form.monthlyBranchFee || 0),
       monthly_staff_fee: Number(form.monthlyStaffFee || 0),
       billing_currency: form.billingCurrency || 'CRC',
+      staff_collections_enabled: form.staffCollectionsEnabled,
     }
 
     setSaving(true)
@@ -241,6 +244,7 @@ function CategoriesPage() {
                 <th className="pb-2">Imagen</th>
                 <th className="pb-2">Slug</th>
                 <th className="pb-2">Cobro</th>
+                <th className="pb-2">Cobros internos</th>
                 <th className="pb-2">Descripcion</th>
                 <th className="pb-2">Estado</th>
                 <th className="pb-2">Acciones</th>
@@ -249,7 +253,7 @@ function CategoriesPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td className="py-4 text-slate-500" colSpan={7}>
+                  <td className="py-4 text-slate-500" colSpan={8}>
                     Cargando categorias...
                   </td>
                 </tr>
@@ -279,6 +283,13 @@ function CategoriesPage() {
                       <p className="text-xs text-slate-500">
                         Staff: {category.billingCurrency} {Number(category.monthlyStaffFee || 0).toFixed(2)}
                       </p>
+                    </td>
+                    <td className="py-3">
+                      <StatusBadge
+                        active={category.staffCollectionsEnabled}
+                        activeText="Activo"
+                        inactiveText="Inactivo"
+                      />
                     </td>
                     <td className="py-3">{category.description || 'Sin descripcion'}</td>
                     <td className="py-3">
@@ -426,6 +437,14 @@ function CategoriesPage() {
               />
             </label>
           </div>
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={form.staffCollectionsEnabled}
+              onChange={(event) => updateField('staffCollectionsEnabled', event.target.checked)}
+            />
+            Cobros internos de staff habilitados
+          </label>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
