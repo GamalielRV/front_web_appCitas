@@ -32,7 +32,6 @@ function AppLayout() {
   const location = useLocation()
   const { authUser, logout } = useAuth()
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-  const s3Region = import.meta.env.VITE_AWS_S3_REGION || 'us-east-1'
   const routeKey = navItems.find((item) =>
     item.end ? location.pathname === item.to : location.pathname.startsWith(item.to),
   )?.to
@@ -77,8 +76,7 @@ function AppLayout() {
 
                 <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                   <div className="rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-600">
-                    API: <span className="font-semibold text-slate-800">{apiBaseUrl}</span> | S3 Region:{' '}
-                    <span className="font-semibold text-slate-800">{s3Region}</span>
+                    API: <span className="font-semibold text-slate-800">{apiBaseUrl}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
